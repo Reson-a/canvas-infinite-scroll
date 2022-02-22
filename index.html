@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Infinite Scroll</title>
+</head>
+
+<body>
+  <canvas id="canvas" width="1200" height="600"></canvas>
+  <script type="module" lang="typescript">
+    import InfiniteScrollCtx from './src/Index.ts'
+    class SimpleSheet extends InfiniteScrollCtx {
+      colWidth = 100
+      rowHeight = 30
+      paintContent(ctx, rect, posX, posY) {
+        let {
+          startColIndex,
+          startRowIndex,
+          endColIndex,
+          endRowIndex,
+          offsetWidth,
+          offsetHeight,
+        } = this.getPosByRect(rect, posX, posY);
+
+        ctx.font = "14px Arial";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+
+        for (let i = startColIndex; i <= endColIndex; i++) {
+          for (let j = startRowIndex; j <= endRowIndex; j++) {
+            let x = rect.x - offsetWidth + (i - startColIndex) * this.colWidth;
+            let y = rect.y - offsetHeight + (j - startRowIndex) * this.rowHeight;
+            let text = `${i + 1},${j + 1}`;
+
+            ctx.beginPath();
+            ctx.moveTo(rect.x, y);
+            ctx.lineTo(rect.x + rect.width, y);
+            ctx.moveTo(x, rect.y);
+            ctx.lineTo(x, rect.y + rect.height);
+            ctx.stroke();
+            ctx.fillText(
+              text,
+              x + this.colWidth / 2,
+              y + this.rowHeight / 2
+            );
+          }
+        }
+      }
+      getPosByRect(rect, posX, posY) {
+        let { x, y, width, height } = rect;
+        x += posX;
+        y += posY;
+        let startColIndex = Math.floor(x / this.colWidth);
+        let startRowIndex = Math.floor(y / this.rowHeight);
+        let offsetWidth = x - startColIndex * this.colWidth;
+        let offsetHeight = y - startRowIndex * this.rowHeight;
+        let endColIndex = Math.ceil((x + width) / this.colWidth);
+        let endRowIndex = Math.ceil((y + height) / this.rowHeight);
+        return {
+          startColIndex,
+          startRowIndex,
+          endColIndex,
+          endRowIndex,
+          offsetWidth,
+          offsetHeight,
+        };
+      }
+    }
+
+    const canvas = document.getElementById('canvas')
+    let sheet = new SimpleSheet(canvas)
+    sheet.paint()
+    canvas.addEventListener('mousewheel', e => {
+      e.stopPropagation()
+      sheet.moveBy(e.deltaX, e.deltaY)
+    })
+  </script>
+</body>
+
+</html>
